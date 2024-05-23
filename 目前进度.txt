@@ -3,6 +3,7 @@ import numpy as np
 import time
 import mediapipe as mp
 
+
 # 设置颜色范围
 lower = np.array([25, 30, 110])
 upper = np.array([80, 70, 180])
