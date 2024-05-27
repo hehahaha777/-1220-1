@@ -1,0 +1,159 @@
+import cv2
+import numpy as np
+import imageio
+import time
+
+# 设置颜色范围
+lower = np.array([25, 30, 110])
+upper = np.array([80, 70, 180])
+
+def generateSeedModel(img, contours, png_img_resized):
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 700:
+            M = cv2.moments(contour)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                png_x = cx - (png_img_resized.shape[1] // 2)
+                png_y = cy - (png_img_resized.shape[0] // 2)
+                if png_x >= 0 and png_y >= 0 and png_x + png_img_resized.shape[1] <= img.shape[1] and png_y + png_img_resized.shape[0] <= img.shape[0]:
+                    for c in range(0, 3):
+                        img[png_y:png_y + png_img_resized.shape[0], png_x:png_x + png_img_resized.shape[1], c] = \
+                            img[png_y:png_y + png_img_resized.shape[0], png_x:png_x + png_img_resized.shape[1], c] * (1 - png_img_resized[:, :, 3] / 255.0) + png_img_resized[:, :, c] * (png_img_resized[:, :, 3] / 255.0)
+
+# 加载带有透明度的PNG图像（RGBA）并调整大小
+png_img_path = r'C:\Users\User\Downloads\seed.png'
+png_img = cv2.imread(png_img_path, cv2.IMREAD_UNCHANGED)
+desired_width = 30
+desired_height = 30
+png_img_resized = cv2.resize(png_img, (desired_width, desired_height))
+
+# Load the GIF image
+gif_path = r'C:\Users\User\Downloads\duck.gif'
+gif = imageio.mimread(gif_path)
+gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
+gif_resized = [cv2.resize(img, (100, 100)) for img in gif]
+gif_index = 0
+
+# 开始捕获来自摄像头的视频
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("无法打开摄像头")
+    exit()
+
+# 创建窗口以显示最终叠加图像
+cv2.namedWindow('Final Overlay', cv2.WINDOW_NORMAL)  # 使用正常窗口大小以便后续设置全屏
+cv2.setWindowProperty('Final Overlay', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)  # 设置窗口为全屏模式
+
+# 控制是否显示中心图像的布尔变量
+show_center_image = False
+
+# 控制中心图像延迟显示的布尔变量
+delay_center_image = False
+
+# 计时器变量
+start_time = 0
+
+# 控制颜色检测是否继续进行的布尔变量
+color_detection_active = True
+
+# 初始化MediaPipe手部检测
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+
+
+# Main loop to capture video from camera
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Cannot open camera")
+    exit()
+
+
+while True:
+    ret, img = cap.read()
+    if not ret:
+        print("无法接收帧")
+        break
+    img = cv2.resize(img, (640, 360))
+
+    if color_detection_active:
+        mask = cv2.inRange(img, lower, upper)
+
+        # 将掩码应用于原始图像
+        result = cv2.bitwise_and(img, img, mask=mask)
+
+        # 找到轮廓
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # 如果检测到轮廓，将布尔变量设置为True以显示中心图像
+        if len(contours) > 0:
+            show_center_image = True
+            if not delay_center_image:
+                delay_center_image = True
+                start_time = time.time()
+
+        # 在叠加图像的大轮廓区域上叠加PNG图像
+        overlay_img = np.zeros_like(img)
+        generateSeedModel(overlay_img, contours, png_img_resized)
+    else:
+        overlay_img = np.zeros_like(img)
+
+    # 延迟3秒显示中心图像
+    if delay_center_image and time.time() - start_time >= 3:
+        delay_center_image = False
+        color_detection_active = False  # 停止颜色检测
+
+    # 加载要在视频中心叠加的PNG图像
+    png_overlay_path = r'C:\Users\User\Downloads\seed.png'
+    png_overlay = cv2.imread(png_overlay_path, cv2.IMREAD_UNCHANGED)
+
+    # 将PNG图像调整大小以便叠加到视频中
+    desired_overlay_width = 100
+    desired_overlay_height = 100
+    png_overlay_resized = cv2.resize(png_overlay, (desired_overlay_width, desired_overlay_height))
+    
+    if show_center_image and not delay_center_image:
+        # Display the GIF image
+        overlay_img = np.zeros_like(img)
+        gif_frame = gif_resized[gif_index]
+        gif_index = (gif_index + 1) % len(gif_resized)
+
+        center_x = (overlay_img.shape[1] - gif_frame.shape[1]) // 2 + 100
+        center_y = (overlay_img.shape[0] - gif_frame.shape[0]) // 2
+
+        for c in range(0, 3):
+            overlay_img[center_y:center_y + gif_frame.shape[0], center_x:center_x + gif_frame.shape[1], c] = \
+                overlay_img[center_y:center_y + gif_frame.shape[0], center_x:center_x + gif_frame.shape[1], c] * (1 - gif_frame[:, :, 3] / 255.0) + gif_frame[:, :, c] * (gif_frame[:, :, 3] / 255.0)
+
+       # 如果show_center_image为True且delay_center_image为False，则在视频帧的中心叠加PNG图像
+    if show_center_image and not delay_center_image:
+        overlay_img[overlay_y:overlay_y + desired_overlay_height, overlay_x:overlay_x + desired_overlay_width, :] = \
+            overlay_img[overlay_y:overlay_y + desired_overlay_height, overlay_x:overlay_x + desired_overlay_width, :] * (1 - alpha_channel / 255.0) + \
+            png_overlay_resized[:, :, :3] * (alpha_channel / 255.0)
+
+        # 在中心图片显示后，开始手部检测
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = hands.process(img_rgb)
+
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                mp.solutions.drawing_utils.draw_landmarks(
+                    overlay_img, 
+                    hand_landmarks, 
+                    mp_hands.HAND_CONNECTIONS,
+                    mp.solutions.drawing_utils.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                    mp.solutions.drawing_utils.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
+                )
+
+
+
+    cv2.imshow('Final Overlay', overlay_img)
+
+    key = cv2.waitKey(1)
+    if key == ord('q'):
+        cv2.waitKey(1)
+        break
+
+cap.release()
+cv2.destroyAllWindows()
