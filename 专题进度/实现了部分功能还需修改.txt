@@ -1,0 +1,169 @@
+import cv2
+import numpy as np
+import imageio
+import time
+import mediapipe as mp
+
+# 设置颜色范围
+lower = np.array([25, 30, 110])
+upper = np.array([80, 70, 180])
+
+def generateSeedModel(img, contours, png_img_resized):
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 700:
+            M = cv2.moments(contour)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                png_x = cx - (png_img_resized.shape[1] // 2)
+                png_y = cy - (png_img_resized.shape[0] // 2)
+                if png_x >= 0 and png_y >= 0 and png_x + png_img_resized.shape[1] <= img.shape[1] and png_y + png_img_resized.shape[0] <= img.shape[0]:
+                    for c in range(0, 3):
+                        img[png_y:png_y + png_img_resized.shape[0], png_x:png_x + png_img_resized.shape[1], c] = \
+                            img[png_y:png_y + png_img_resized.shape[0], png_x:png_x + png_img_resized.shape[1], c] * (1 - png_img_resized[:, :, 3] / 255.0) + png_img_resized[:, :, c] * (png_img_resized[:, :, 3] / 255.0)
+
+# 加载带有透明度的PNG图像（RGBA）并调整大小
+png_img_path = r'C:\Users\User\Downloads\seed.png'
+png_img = cv2.imread(png_img_path, cv2.IMREAD_UNCHANGED)
+desired_width = 30
+desired_height = 30
+png_img_resized = cv2.resize(png_img, (desired_width, desired_height))
+
+# 加载手部检测模型
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+
+# 加载中心图像和GIF
+center_image_path = r'C:\Users\User\Downloads\oho2.png'
+center_image = cv2.imread(center_image_path)
+center_image_resized = cv2.resize(center_image, (100, 100))
+
+# GIF 动画
+gif_path = r'C:\Users\User\Downloads\下雨.gif'
+gif = imageio.mimread(gif_path)
+gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
+gif_resized = [cv2.resize(img, (100, 100)) for img in gif]
+
+# 指定的 GIF 动画
+specified_gif_path = r'C:\Users\User\Downloads\specified.gif'
+specified_gif = imageio.mimread(specified_gif_path)
+specified_gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in specified_gif]
+specified_gif_resized = [cv2.resize(img, (100, 100)) for img in specified_gif]
+
+# 控制变量
+play_gif = False
+gif_index = 0
+gif_play_count = 0  # 记录 GIF 播放次数
+
+# 控制中心图像和指定 GIF 的播放
+play_specified_gif = False
+specified_gif_index = 0
+
+# 初始化变量
+color_detected = False
+start_time = 0
+show_center_image = False
+delay_center_image = False
+color_detection_active = True
+
+# 开始捕获来自摄像头的视频
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("无法打开摄像头")
+    exit()
+
+# 创建窗口以显示最终叠加图像
+cv2.namedWindow('Final Overlay', cv2.WINDOW_NORMAL)
+cv2.setWindowProperty('Final Overlay', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+while True:
+    ret, img = cap.read()
+    if not ret:
+        print("无法接收帧")
+        break
+    img = cv2.resize(img, (640, 360))
+
+    if color_detection_active:
+        mask = cv2.inRange(img, lower, upper)
+        result = cv2.bitwise_and(img, img, mask=mask)
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) > 0:
+            show_center_image = True
+            if not delay_center_image:
+                delay_center_image = True
+                start_time = time.time()
+        overlay_img = np.zeros_like(img)
+        generateSeedModel(overlay_img, contours, png_img_resized)
+    else:
+        overlay_img = np.zeros_like(img)
+
+    if delay_center_image and time.time() - start_time >= 3:
+        delay_center_image = False
+        color_detection_active = False
+
+    if show_center_image and not delay_center_image:
+        overlay_img = np.zeros_like(img)
+        gif_frame = gif_resized[gif_index]
+        center_x = (overlay_img.shape[1] - gif_frame.shape[1]) // 2 
+        center_y = (overlay_img.shape[0] - gif_frame.shape[0]) // 2 - 100
+
+        for c in range(0, 3):
+            overlay_img[center_y:center_y + gif_frame.shape[0], center_x:center_x + gif_frame.shape[1], c] = \
+                overlay_img[center_y:center_y + gif_frame.shape[0], center_x:center_x + gif_frame.shape[1], c] * (1 - gif_frame[:, :, 3] / 255.0) + gif_frame[:, :, c] * (gif_frame[:, :, 3] / 255.0)
+
+        # 手部检测
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = hands.process(img_rgb)
+
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                mp.solutions.drawing_utils.draw_landmarks(
+                    overlay_img, 
+                    hand_landmarks, 
+                    mp_hands.HAND_CONNECTIONS,
+                    mp.solutions.drawing_utils.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                    mp.solutions.drawing_utils.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
+                )
+
+                for i in [8, 12, 16, 20]:  # 检测食指、中指、无名指和小指的末端
+                    x = int(hand_landmarks.landmark[i].x * img.shape[1])
+                    y = int(hand_landmarks.landmark[i].y * img.shape[0])
+                    if center_x < x < center_x + gif_frame.shape[1] and center_y < y < center_y + gif_frame.shape[0]:
+                        play_gif = True
+
+        if play_gif:
+            gif_index = (gif_index + 1) % len(gif_resized)
+            if gif_index == 0:
+                play_gif = False
+                gif_play_count += 1  # 增加 GIF 播放次数
+                play_specified_gif = True  # 开始播放指定 GIF
+
+    if play_specified_gif:
+        specified_gif_frame = specified_gif_resized[specified_gif_index]
+        center_x = (overlay_img.shape[1] - specified_gif_frame.shape[1]) // 2 
+        center_y = (overlay_img.shape[0] - specified_gif_frame.shape[0]) // 2 + 100
+        for c in range(0, 3):
+            overlay_img[center_y:center_y + specified_gif_frame.shape[0], center_x:center_x + specified_gif_frame.shape[1], c] = \
+                overlay_img[center_y:center_y + specified_gif_frame.shape[0], center_x:center_x + specified_gif_frame.shape[1], c] * (1 - specified_gif_frame[:, :, 3] / 255.0) + specified_gif_frame[:, :, c] * (specified_gif_frame[:, :, 3] / 255.0)
+        specified_gif_index += 1
+        if specified_gif_index == len(specified_gif_resized):
+            specified_gif_index = 0
+            play_specified_gif = False
+
+    if not play_specified_gif and not play_gif and show_center_image:
+        # 显示中心图像
+        center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2 
+        center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 100
+        for c in range(0, 3):
+            overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
+                center_image_resized[:, :, c]
+
+    cv2.imshow('Final Overlay', overlay_img)
+
+    key = cv2.waitKey(1)
+    if key == 27:
+        break
+
+cap.release()
+cv2.destroyAllWindows()
