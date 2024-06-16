@@ -123,6 +123,8 @@ while True:
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         results = hands.process(img_rgb)
 
+        hand_in_gif_area = False
+
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
                 mp.solutions.drawing_utils.draw_landmarks(
@@ -139,7 +141,12 @@ while True:
                     if gif_x - 10 < x < gif_x + gif_frame.shape[1] + 10 and gif_y - 10 < y < gif_y + gif_frame.shape[0] + 10:  # 增加容错范围
                         gif_attached = True
                         gif_last_position = (x - gif_frame.shape[1] // 2, y - gif_frame.shape[0] // 2)
+                        hand_in_gif_area = True
                         break
+
+        if not hand_in_gif_area:
+            gif_attached = False
+            gif_index = 0  # 重置gif_index以暂停动画
 
         if gif_attached:
             gif_index = (gif_index + 1) % len(gif_resized)
