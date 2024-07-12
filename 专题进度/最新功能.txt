@@ -44,13 +44,19 @@ play_gif = False
 gif_index = 0
 gif_play_count = 0  # 记录GIF播放的次数
 
-# 加载中心图像和替换图像
+# 加载中心图像
 center_image_path = r'C:\Users\User\Downloads\oho2.png'
 center_image = cv2.imread(center_image_path, cv2.IMREAD_UNCHANGED)
 center_image_resized = cv2.resize(center_image, (100, 100))
-new_center_image_path = r'C:\Users\User\Downloads\icon.png'
-new_center_image = cv2.imread(new_center_image_path, cv2.IMREAD_UNCHANGED)
-new_center_image_resized = cv2.resize(new_center_image, (100, 100))
+
+# 加载新的图像
+new_image1_path = r'C:\Users\User\Downloads\f22.png'
+new_image1 = cv2.imread(new_image1_path, cv2.IMREAD_UNCHANGED)
+new_image1_resized = cv2.resize(new_image1, (100, 100))
+
+new_image2_path = r'C:\Users\User\Downloads\f33.png'
+new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
+new_image2_resized = cv2.resize(new_image2, (100, 100))
 
 # 初始化MediaPipe手部检测
 mp_hands = mp.solutions.hands
@@ -78,9 +84,11 @@ gif_initial_position = (270, 80)
 gif_last_position = gif_initial_position
 gif_attached = False
 
-# 初始化中心图像变更计时器
-center_image_timer = 0
-center_image_changed = False
+# 中心图像更改相关变量
+center_image_change_start_time = None
+center_image_elapsed_time = 0
+center_image_changed_to_first = False
+center_image_changed_to_second = False
 
 while True:
     ret, img = cap.read()
@@ -148,38 +156,49 @@ while True:
                         hand_in_gif_area = True
                         break
 
-                # 检测手指是否接触中心图像
-                center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2
-                center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 100
-                if center_x <= x <= center_x + center_image_resized.shape[1] and center_y <= y <= center_y + center_image_resized.shape[0]:
-                    center_image_timer += 1
-                else:
-                    center_image_timer = 0
-
         if not hand_in_gif_area:
             gif_attached = False
 
         if gif_attached:
             gif_index = (gif_index + 1) % len(gif_resized)
             if gif_index == 0:
-                gif_play_count += 1
+                play_gif = False
+                gif_play_count += 1  # 增加GIF播放次数
 
-        # 根据计时器更改中心图像
-        if center_image_timer >= 60 and not center_image_changed:  # 大约2秒钟
-            center_image_resized = new_center_image_resized
-            center_image_changed = True
-
-        # 叠加中心图像
-        center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2
+        # 检查gif与center_image的碰撞
+        center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2 
         center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 100
+        if gif_x < center_x + center_image_resized.shape[1] and gif_x + gif_frame.shape[1] > center_x and gif_y < center_y + center_image_resized.shape[0] and gif_y + gif_frame.shape[0] > center_y:
+            if center_image_change_start_time is None:
+                center_image_change_start_time = time.time()
+            else:
+                center_image_elapsed_time += time.time() - center_image_change_start_time
+                center_image_change_start_time = time.time()
+        else:
+            center_image_change_start_time = None
+            center_image_elapsed_time = 0
+            center_image_changed_to_first = False
+            center_image_changed_to_second = False
+
+        # 更改中心图像 并且累计时间
+        if center_image_elapsed_time >= 3 and not center_image_changed_to_first:
+            center_image_resized = new_image1_resized
+            center_image_changed_to_first = True
+        elif center_image_elapsed_time >= 7 and not center_image_changed_to_second:
+            center_image_resized = new_image2_resized
+            center_image_changed_to_second = True
+
+        # 显示中心图像
         for c in range(0, 3):
             overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
-                overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] * (1 - center_image_resized[:, :, 3] / 255.0) + center_image_resized[:, :, c] * (center_image_resized[:, :, 3] / 255.0)
+                center_image_resized[:, :, c] * (center_image_resized[:, :, 3] / 255.0) + overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] * (1 - center_image_resized[:, :, 3] / 255.0)
 
     cv2.imshow('Final Overlay', overlay_img)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    key = cv2.waitKey(1)
+    if key == ord('q'):
         break
 
 cap.release()
 cv2.destroyAllWindows()
+print(f"GIF播放次数: {gif_play_count}")
