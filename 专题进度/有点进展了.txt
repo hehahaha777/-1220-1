@@ -101,6 +101,9 @@ rectangle_generation_interval = 5  # 矩形生成间隔（秒）
 last_rectangle_generation_time = time.time()
 center_image_shown_time = 0  # 记录中心图像显示的时间
 
+# 新增变量来控制矩形生成
+rectangles_generation_allowed = False
+
 while True:
     ret, img = cap.read()
     if not ret:
@@ -170,18 +173,17 @@ while True:
                 # 检测手势
                 if hand_landmarks.landmark[8].y < hand_landmarks.landmark[5].y:  # 食指指尖高于指根，假设这是打开手掌的手势
                     gesture_detected = True
-                    rectangle_position = (x, y)
 
         if not hand_in_gif_area:
             gif_attached = False
 
         if gif_attached:
             gif_index = (gif_index + 1) % len(gif_resized)
-            if gif_index == 0:
-                gif_play_count += 1
-            gif_last_position = gif_last_position  # 保持上一个位置
+        else:
+            gif_index = 0
+            gif_play_count += 1  # 记录GIF播放的次数
 
-         # 检查gif与center_image的碰撞
+        # 检查gif与center_image的碰撞
         center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2 
         center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 100
         if gif_x < center_x + center_image_resized.shape[1] and gif_x + gif_frame.shape[1] > center_x and gif_y < center_y + center_image_resized.shape[0] and gif_y + gif_frame.shape[0] > center_y:
@@ -204,56 +206,57 @@ while True:
             center_image_resized = new_image2_resized
             center_image_changed_to_second = True
             show_rectangles = True  # 开始显示矩形
+            rectangles_generation_allowed = True  # 允许矩形生成
 
         # 显示中心图像
         for c in range(0, 3):
             overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
                 center_image_resized[:, :, c] * (center_image_resized[:, :, 3] / 255.0) + overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] * (1 - center_image_resized[:, :, 3] / 255.0)
 
-        # 定时生成矩形并向画面中心移动
-        current_time = time.time()
-        if current_time - last_rectangle_generation_time >= rectangle_generation_interval:
-            last_rectangle_generation_time = current_time
-            # 从画面外随机生成矩形位置
-            random_side = np.random.choice(['left', 'right', 'top', 'bottom'])
-            if random_side == 'left':
-                rectangle_position = (-20, np.random.randint(0, img.shape[0]))
-            elif random_side == 'right':
-                rectangle_position = (img.shape[1] + 20, np.random.randint(0, img.shape[0]))
-            elif random_side == 'top':
-                rectangle_position = (np.random.randint(0, img.shape[1]), -20)
-            elif random_side == 'bottom':
-                rectangle_position = (np.random.randint(0, img.shape[1]), img.shape[0] + 20)
-            target_position = (overlay_img.shape[1] // 2, overlay_img.shape[0] // 2)
+        # 仅当允许时定时生成矩形并向画面中心移动
+        if rectangles_generation_allowed:
+            current_time = time.time()
+            if current_time - last_rectangle_generation_time >= rectangle_generation_interval:
+                last_rectangle_generation_time = current_time
+                # 从画面外随机生成矩形位置
+                random_side = np.random.choice(['left', 'right', 'top', 'bottom'])
+                if random_side == 'left':
+                    rectangle_position = (-20, np.random.randint(0, img.shape[0]))
+                elif random_side == 'right':
+                    rectangle_position = (img.shape[1] + 20, np.random.randint(0, img.shape[0]))
+                elif random_side == 'top':
+                    rectangle_position = (np.random.randint(0, img.shape[1]), -20)
+                elif random_side == 'bottom':
+                    rectangle_position = (np.random.randint(0, img.shape[1]), img.shape[0] + 20)
+                target_position = (overlay_img.shape[1] // 2, overlay_img.shape[0] // 2)
 
-        # 生成并移动矩形
-        if rectangle_position and target_position:
-            rect_x, rect_y = rectangle_position
-            target_x, target_y = target_position
+            # 生成并移动矩形
+            if rectangle_position and target_position:
+                rect_x, rect_y = rectangle_position
+                target_x, target_y = target_position
 
-            direction = np.array([target_x - rect_x, target_y - rect_y])
-            distance = np.linalg.norm(direction)
+                direction = np.array([target_x - rect_x, target_y - rect_y])
+                distance = np.linalg.norm(direction)
 
-            if distance > rectangle_velocity:
-                direction = direction / distance  # 归一化方向
-                rect_x += int(direction[0] * rectangle_velocity)
-                rect_y += int(direction[1] * rectangle_velocity)
-                rectangle_position = (rect_x, rect_y)
-            
+                if distance > rectangle_velocity:
+                    direction = direction / distance  # 归一化方向
+                    rect_x += int(direction[0] * rectangle_velocity)
+                    rect_y += int(direction[1] * rectangle_velocity)
+                    rectangle_position = (rect_x, rect_y)
 
-            # 检测手是否触碰到矩形
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    for i in [8, 12, 16, 20]:
-                        x = int(hand_landmarks.landmark[i].x * img.shape[1])
-                        y = int(hand_landmarks.landmark[i].y * img.shape[0])
-                        if rect_x - 10 < x < rect_x + 10 and rect_y - 10 < y < rect_y + 10:
-                            rectangle_position = None  # 手指碰到矩形，矩形消失
-                            break
+                # 显示矩形
+                if rectangle_position:
+                    cv2.rectangle(overlay_img, (rect_x - 10, rect_y - 10), (rect_x + 10, rect_y + 10), (0, 255, 0), -1)
 
-            # 显示矩形
-            if rectangle_position:
-                cv2.rectangle(overlay_img, (rect_x - 10, rect_y - 10), (rect_x + 10, rect_y + 10), (0, 255, 0), -1)
+                # 检测手是否触碰到矩形
+                if results.multi_hand_landmarks:
+                    for hand_landmarks in results.multi_hand_landmarks:
+                        for i in [8, 12, 16, 20]:
+                            x = int(hand_landmarks.landmark[i].x * img.shape[1])
+                            y = int(hand_landmarks.landmark[i].y * img.shape[0])
+                            if rect_x - 10 < x < rect_x + 10 and rect_y - 10 < y < rect_y + 10:
+                                rectangle_position = None  # 手指碰到矩形，矩形消失
+                                break
 
     cv2.imshow('Final Overlay', overlay_img)
 
