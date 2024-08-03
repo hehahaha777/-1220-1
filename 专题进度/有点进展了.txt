@@ -58,6 +58,15 @@ new_image2_path = r'C:\Users\User\Downloads\f33.png'
 new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
 new_image2_resized = cv2.resize(new_image2, (100, 100))
 
+# 加载手动和自动消除后图像
+manual_cleared_image_path = r'C:\Users\User\Downloads\sid.png'
+manual_cleared_image = cv2.imread(manual_cleared_image_path, cv2.IMREAD_UNCHANGED)
+manual_cleared_image_resized = cv2.resize(manual_cleared_image, (100, 100))
+
+auto_cleared_image_path = r'C:\Users\User\Downloads\f44.png'
+auto_cleared_image = cv2.imread(auto_cleared_image_path, cv2.IMREAD_UNCHANGED)
+auto_cleared_image_resized = cv2.resize(auto_cleared_image, (100, 100))
+
 # 初始化MediaPipe手部检测
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -103,6 +112,10 @@ center_image_shown_time = 0  # 记录中心图像显示的时间
 
 # 新增变量来控制矩形生成
 rectangles_generation_allowed = False
+
+# 手动和自动消除的计数器
+manual_clear_count = 0
+auto_clear_count = 0
 
 while True:
     ret, img = cap.read()
@@ -164,7 +177,7 @@ while True:
                 for i in [8, 12, 16, 20]:  # 检测食指、中指、无名指和小指的末端
                     x = int(hand_landmarks.landmark[i].x * img.shape[1])
                     y = int(hand_landmarks.landmark[i].y * img.shape[0])
-                    if gif_x - 10 < x < gif_x + gif_frame.shape[1] + 10 and gif_y - 10 < y < gif_y + gif_frame.shape[0] + 10:  # 增加容错范围
+                    if gif_x - 10 < x < gif_x + gif_frame.shape[1] + 10 and gif_y - 10 < y < gif_y + gif_frame.shape[0] + 10:
                         gif_attached = True
                         gif_last_position = (x - gif_frame.shape[1] // 2, y - gif_frame.shape[0] // 2)
                         hand_in_gif_area = True
@@ -195,8 +208,6 @@ while True:
         else:
             center_image_change_start_time = None
             center_image_elapsed_time = 0
-            center_image_changed_to_first = False
-            center_image_changed_to_second = False
 
         # 更改中心图像 并且累计时间
         if center_image_elapsed_time >= 3 and not center_image_changed_to_first:
@@ -249,6 +260,7 @@ while True:
                     cv2.rectangle(overlay_img, (rect_x - 10, rect_y - 10), (rect_x + 10, rect_y + 10), (0, 255, 0), -1)
 
                 # 检测手是否触碰到矩形
+                rectangle_cleared = False
                 if results.multi_hand_landmarks:
                     for hand_landmarks in results.multi_hand_landmarks:
                         for i in [8, 12, 16, 20]:
@@ -256,7 +268,26 @@ while True:
                             y = int(hand_landmarks.landmark[i].y * img.shape[0])
                             if rect_x - 10 < x < rect_x + 10 and rect_y - 10 < y < rect_y + 10:
                                 rectangle_position = None  # 手指碰到矩形，矩形消失
+                                rectangle_cleared = True
+                                manual_clear_count += 1
                                 break
+                        if rectangle_cleared:
+                            break
+
+                # 矩形自动消除
+                if not rectangle_cleared:
+                    if (rect_x, rect_y) == target_position:
+                        rectangle_position = None
+                        auto_clear_count += 1  # 增加自动消除计数
+                        rectangle_auto_cleared = True  # 标志矩形自动消除
+
+        # 检查清除计数器并更新中心图像
+        if manual_clear_count >= 5:
+            center_image_resized = manual_cleared_image_resized
+            manual_clear_count = 0  # 重置计数器
+        elif auto_clear_count >= 5:
+            center_image_resized = auto_cleared_image_resized
+            auto_clear_count = 0  # 重置计数器
 
     cv2.imshow('Final Overlay', overlay_img)
 
