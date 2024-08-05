@@ -274,9 +274,13 @@ while True:
                         if rectangle_cleared:
                             break
 
+               
+                center_threshold = 10
+
                 # 矩形自动消除
                 if not rectangle_cleared:
-                    if (rect_x, rect_y) == target_position:
+                    distance_to_target = np.linalg.norm(np.array(rectangle_position) - np.array(target_position))
+                    if distance_to_target < center_threshold:
                         rectangle_position = None
                         auto_clear_count += 1  # 增加自动消除计数
                         rectangle_auto_cleared = True  # 标志矩形自动消除
