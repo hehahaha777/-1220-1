@@ -1,4 +1,4 @@
-import cv2
+### import cv2
 import numpy as np
 import imageio
 import time
@@ -39,10 +39,19 @@ gif = imageio.mimread(gif_path)
 gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
 gif_resized = [cv2.resize(img, (100, 100)) for img in gif]
 
+# 加载新的GIF图像
+new_gif_path = r'C:\Users\User\Downloads\rain.gif'
+new_gif = imageio.mimread(new_gif_path)
+new_gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in new_gif]
+new_gif_resized = [cv2.resize(img, (100, 100)) for img in new_gif]
+
 # 控制GIF的播放状态
-play_gif = False
 gif_index = 0
-gif_play_count = 0  # 记录GIF播放的次数
+new_gif_index = 0
+gif_play_count = 0
+
+# 初始化新的GIF显示状态
+new_image2_shown = False
 
 # 加载中心图像
 center_image_path = r'C:\Users\User\Downloads\oho2.png'
@@ -103,12 +112,12 @@ center_image_changed_to_second = False
 gesture_detected = False
 rectangle_position = None
 target_position = None
-rectangle_velocity = 5  # 矩形移动速度
+rectangle_velocity = 5
 
 # 定时生成矩形相关变量
-rectangle_generation_interval = 5  # 矩形生成间隔（秒）
+rectangle_generation_interval = 5
 last_rectangle_generation_time = time.time()
-center_image_shown_time = 0  # 记录中心图像显示的时间
+center_image_shown_time = 0
 
 # 新增变量来控制矩形生成
 rectangles_generation_allowed = False
@@ -116,6 +125,9 @@ rectangles_generation_allowed = False
 # 手动和自动消除的计数器
 manual_clear_count = 0
 auto_clear_count = 0
+
+# 定义 new_gif 的位置
+new_gif_position = (0, 0)  # 你可以在这里调整位置坐标
 
 while True:
     ret, img = cap.read()
@@ -174,7 +186,7 @@ while True:
                     mp.solutions.drawing_utils.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
                 )
 
-                for i in [8, 12, 16, 20]:  # 检测食指、中指、无名指和小指的末端
+                for i in [8, 12, 16, 20]:
                     x = int(hand_landmarks.landmark[i].x * img.shape[1])
                     y = int(hand_landmarks.landmark[i].y * img.shape[0])
                     if gif_x - 10 < x < gif_x + gif_frame.shape[1] + 10 and gif_y - 10 < y < gif_y + gif_frame.shape[0] + 10:
@@ -183,8 +195,7 @@ while True:
                         hand_in_gif_area = True
                         break
 
-                # 检测手势
-                if hand_landmarks.landmark[8].y < hand_landmarks.landmark[5].y:  # 食指指尖高于指根，假设这是打开手掌的手势
+                if hand_landmarks.landmark[8].y < hand_landmarks.landmark[5].y:
                     gesture_detected = True
 
         if not hand_in_gif_area:
@@ -192,11 +203,11 @@ while True:
 
         if gif_attached:
             gif_index = (gif_index + 1) % len(gif_resized)
+            gif_play_count += 1
         else:
             gif_index = 0
-            gif_play_count += 1  # 记录GIF播放的次数
 
-        # 检查gif与center_image的碰撞
+        # 检查 gif 与 center_image 的碰撞
         center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2 
         center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 100
         if gif_x < center_x + center_image_resized.shape[1] and gif_x + gif_frame.shape[1] > center_x and gif_y < center_y + center_image_resized.shape[0] and gif_y + gif_frame.shape[0] > center_y:
@@ -209,27 +220,37 @@ while True:
             center_image_change_start_time = None
             center_image_elapsed_time = 0
 
-        # 更改中心图像 并且累计时间
         if center_image_elapsed_time >= 3 and not center_image_changed_to_first:
             center_image_resized = new_image1_resized
             center_image_changed_to_first = True
         elif center_image_elapsed_time >= 7 and not center_image_changed_to_second:
             center_image_resized = new_image2_resized
             center_image_changed_to_second = True
-            show_rectangles = True  # 开始显示矩形
-            rectangles_generation_allowed = True  # 允许矩形生成
+            show_rectangles = True
+            rectangles_generation_allowed = True
+            new_image2_shown = True  # 标记 new_image2 已经显示过
 
-        # 显示中心图像
         for c in range(0, 3):
             overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
                 center_image_resized[:, :, c] * (center_image_resized[:, :, 3] / 255.0) + overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] * (1 - center_image_resized[:, :, 3] / 255.0)
 
-        # 仅当允许时定时生成矩形并向画面中心移动
+        if new_image2_shown:
+            new_gif_frame = new_gif_resized[new_gif_index]
+            new_gif_x, new_gif_y = new_gif_position  # 使用新的位置坐标
+            # 确保 new_gif 框不超出图像边界
+            new_gif_x = max(0, min(new_gif_x, overlay_img.shape[1] - new_gif_frame.shape[1]))
+            new_gif_y = max(0, min(new_gif_y, overlay_img.shape[0] - new_gif_frame.shape[0]))
+
+            # 叠加 new_gif 图像
+            for c in range(0, 3):
+                overlay_img[new_gif_y:new_gif_y + new_gif_frame.shape[0], new_gif_x:new_gif_x + new_gif_frame.shape[1], c] = \
+                    overlay_img[new_gif_y:new_gif_y + new_gif_frame.shape[0], new_gif_x:new_gif_x + new_gif_frame.shape[1], c] * (1 - new_gif_frame[:, :, 3] / 255.0) + new_gif_frame[:, :, c] * (new_gif_frame[:, :, 3] / 255.0)
+            new_gif_index = (new_gif_index + 1) % len(new_gif_resized)
+
         if rectangles_generation_allowed:
             current_time = time.time()
             if current_time - last_rectangle_generation_time >= rectangle_generation_interval:
                 last_rectangle_generation_time = current_time
-                # 从画面外随机生成矩形位置
                 random_side = np.random.choice(['left', 'right', 'top', 'bottom'])
                 if random_side == 'left':
                     rectangle_position = (-20, np.random.randint(0, img.shape[0]))
@@ -241,7 +262,6 @@ while True:
                     rectangle_position = (np.random.randint(0, img.shape[1]), img.shape[0] + 20)
                 target_position = (overlay_img.shape[1] // 2, overlay_img.shape[0] // 2)
 
-            # 生成并移动矩形
             if rectangle_position and target_position:
                 rect_x, rect_y = rectangle_position
                 target_x, target_y = target_position
@@ -250,16 +270,14 @@ while True:
                 distance = np.linalg.norm(direction)
 
                 if distance > rectangle_velocity:
-                    direction = direction / distance  # 归一化方向
+                    direction = direction / distance
                     rect_x += int(direction[0] * rectangle_velocity)
                     rect_y += int(direction[1] * rectangle_velocity)
                     rectangle_position = (rect_x, rect_y)
 
-                # 显示矩形
                 if rectangle_position:
                     cv2.rectangle(overlay_img, (rect_x - 10, rect_y - 10), (rect_x + 10, rect_y + 10), (0, 255, 0), -1)
 
-                # 检测手是否触碰到矩形
                 rectangle_cleared = False
                 if results.multi_hand_landmarks:
                     for hand_landmarks in results.multi_hand_landmarks:
@@ -267,31 +285,28 @@ while True:
                             x = int(hand_landmarks.landmark[i].x * img.shape[1])
                             y = int(hand_landmarks.landmark[i].y * img.shape[0])
                             if rect_x - 10 < x < rect_x + 10 and rect_y - 10 < y < rect_y + 10:
-                                rectangle_position = None  # 手指碰到矩形，矩形消失
+                                rectangle_position = None
                                 rectangle_cleared = True
                                 manual_clear_count += 1
                                 break
                         if rectangle_cleared:
                             break
 
-               
                 center_threshold = 10
 
-                # 矩形自动消除
                 if not rectangle_cleared:
                     distance_to_target = np.linalg.norm(np.array(rectangle_position) - np.array(target_position))
                     if distance_to_target < center_threshold:
                         rectangle_position = None
-                        auto_clear_count += 1  # 增加自动消除计数
-                        rectangle_auto_cleared = True  # 标志矩形自动消除
+                        auto_clear_count += 1
+                        rectangle_auto_cleared = True
 
-        # 检查清除计数器并更新中心图像
         if manual_clear_count >= 5:
             center_image_resized = manual_cleared_image_resized
-            manual_clear_count = 0  # 重置计数器
+            manual_clear_count = 0
         elif auto_clear_count >= 5:
             center_image_resized = auto_cleared_image_resized
-            auto_clear_count = 0  # 重置计数器
+            auto_clear_count = 0
 
     cv2.imshow('Final Overlay', overlay_img)
 
