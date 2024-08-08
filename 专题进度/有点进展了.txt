@@ -1,4 +1,4 @@
-### import cv2
+import cv2
 import numpy as np
 import imageio
 import time
@@ -49,6 +49,9 @@ new_gif_resized = [cv2.resize(img, (100, 100)) for img in new_gif]
 gif_index = 0
 new_gif_index = 0
 gif_play_count = 0
+new_gif_play_count = 0  # 新增计数器
+new_gif_play_durations = []  # 用于存储播放时长
+new_gif_start_time = None  # 用于跟踪播放开始时间
 
 # 初始化新的GIF显示状态
 new_image2_shown = False
@@ -237,6 +240,7 @@ while True:
         if new_image2_shown:
             new_gif_frame = new_gif_resized[new_gif_index]
             new_gif_x, new_gif_y = new_gif_position  # 使用新的位置坐标
+
             # 确保 new_gif 框不超出图像边界
             new_gif_x = max(0, min(new_gif_x, overlay_img.shape[1] - new_gif_frame.shape[1]))
             new_gif_y = max(0, min(new_gif_y, overlay_img.shape[0] - new_gif_frame.shape[0]))
@@ -245,7 +249,14 @@ while True:
             for c in range(0, 3):
                 overlay_img[new_gif_y:new_gif_y + new_gif_frame.shape[0], new_gif_x:new_gif_x + new_gif_frame.shape[1], c] = \
                     overlay_img[new_gif_y:new_gif_y + new_gif_frame.shape[0], new_gif_x:new_gif_x + new_gif_frame.shape[1], c] * (1 - new_gif_frame[:, :, 3] / 255.0) + new_gif_frame[:, :, c] * (new_gif_frame[:, :, 3] / 255.0)
+            
+            if new_gif_start_time is None:
+                new_gif_start_time = time.time()  # 记录播放开始时间
             new_gif_index = (new_gif_index + 1) % len(new_gif_resized)
+            new_gif_play_count += 1  # 更新计数器
+            new_gif_play_duration = time.time() - new_gif_start_time  # 计算播放时长
+            new_gif_play_durations.append(new_gif_play_duration)  # 保存播放时长
+            new_gif_start_time = time.time()  # 重置播放开始时间
 
         if rectangles_generation_allowed:
             current_time = time.time()
@@ -316,4 +327,10 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+
 print(f"GIF播放次数: {gif_play_count}")
+print(f"new_gif播放次数: {new_gif_play_count}")  # 打印 new_gif 播放次数
+
+# 打印 new_gif 每次播放的时长
+for i, duration in enumerate(new_gif_play_durations):
+    print(f"new_gif 第 {i+1} 次播放时长: {duration:.2f} 秒")
