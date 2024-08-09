@@ -40,7 +40,7 @@ gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
 gif_resized = [cv2.resize(img, (100, 100)) for img in gif]
 
 # 加载新的GIF图像
-new_gif_path = r'C:\Users\User\Downloads\rain.gif'
+new_gif_path = r'C:\Users\User\Downloads\goku.gif'
 new_gif = imageio.mimread(new_gif_path)
 new_gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in new_gif]
 new_gif_resized = [cv2.resize(img, (100, 100)) for img in new_gif]
@@ -69,6 +69,10 @@ new_image1_resized = cv2.resize(new_image1, (100, 100))
 new_image2_path = r'C:\Users\User\Downloads\f33.png'
 new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
 new_image2_resized = cv2.resize(new_image2, (100, 100))
+
+new_image3_path = r'C:\Users\User\Downloads\oho2.png'  # 这里替换成你的 new_image3 的路径
+new_image3 = cv2.imread(new_image3_path, cv2.IMREAD_UNCHANGED)
+new_image3_resized = cv2.resize(new_image3, (100, 100))
 
 # 加载手动和自动消除后图像
 manual_cleared_image_path = r'C:\Users\User\Downloads\sid.png'
@@ -257,6 +261,10 @@ while True:
             new_gif_play_duration = time.time() - new_gif_start_time  # 计算播放时长
             new_gif_play_durations.append(new_gif_play_duration)  # 保存播放时长
             new_gif_start_time = time.time()  # 重置播放开始时间
+         # 新增条件检查播放次数
+        if new_gif_play_count >= 100:
+            center_image_resized = new_image3_resized  # 更改为 new_image3
+            new_image2_shown = False  # 停止显示 new_gif
 
         if rectangles_generation_allowed:
             current_time = time.time()
