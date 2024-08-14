@@ -119,7 +119,7 @@ center_image_changed_to_second = False
 gesture_detected = False
 rectangle_position = None
 target_position = None
-rectangle_velocity = 5
+rectangle_velocity = 20
 
 # 定时生成矩形相关变量
 rectangle_generation_interval = 5
@@ -142,6 +142,13 @@ auto_clear_count = 0
 
 # 定义 new_gif 的位置
 new_gif_position = (0, 0)  # 你可以在这里调整位置坐标
+new_gif_x, new_gif_y = new_gif_position
+new_gif_attached = False
+
+# 初始化变量
+collision_start_time = None  # 用于记录碰撞开始时间
+collision_duration = 0  # 用于累计碰撞时间
+collision_detected = False  # 标志是否检测到碰撞
 
 while True:
     ret, img = cap.read()
@@ -238,13 +245,7 @@ while True:
             center_image_resized = new_image1_resized
             center_image_changed_to_first = True
             new_image1_shown = True  # 标记 new_image1 已经显示过
-            
-        elif center_image_elapsed_time >= 7 and not center_image_changed_to_second:
-            center_image_resized = new_image2_resized
-            center_image_changed_to_second = True
-            show_rectangles = True
-            rectangles_generation_allowed = True
-            new_image2_shown = True  # 标记 new_image2 已经显示过
+      
 
         for c in range(0, 3):
             overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
@@ -252,16 +253,77 @@ while True:
 
         if new_image1_shown:
             new_gif_frame = new_gif_resized[new_gif_index]
-            new_gif_x, new_gif_y = new_gif_position  # 使用新的位置坐标
 
+            new_gif_x, new_gif_y = new_gif_position
+
+            # 手部检测（添加这部分代码）
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            results = hands.process(img_rgb)
+        
+            hand_in_new_gif_area = False
+        
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    for i in [8, 12, 16, 20]:
+                        x = int(hand_landmarks.landmark[i].x * img.shape[1])
+                        y = int(hand_landmarks.landmark[i].y * img.shape[0])
+                        if new_gif_x - 10 < x < new_gif_x + new_gif_frame.shape[1] + 10 and new_gif_y - 10 < y < new_gif_y + new_gif_frame.shape[0] + 10:
+                            new_gif_attached = True
+                            new_gif_position = (x - new_gif_frame.shape[1] // 2, y - new_gif_frame.shape[0] // 2)
+                            hand_in_new_gif_area = True
+                            break
+        
+            if not hand_in_new_gif_area:
+                new_gif_attached = False
+        
+            if new_gif_attached:
+                new_gif_index = (new_gif_index + 1) % len(new_gif_resized)
+                new_gif_play_count += 1
+            else:
+                new_gif_index = 0
+        
+            # 显示 new_gif
+            new_gif_x, new_gif_y = new_gif_position
+        
             # 确保 new_gif 框不超出图像边界
             new_gif_x = max(0, min(new_gif_x, overlay_img.shape[1] - new_gif_frame.shape[1]))
             new_gif_y = max(0, min(new_gif_y, overlay_img.shape[0] - new_gif_frame.shape[0]))
-
+        
             # 叠加 new_gif 图像
             for c in range(0, 3):
                 overlay_img[new_gif_y:new_gif_y + new_gif_frame.shape[0], new_gif_x:new_gif_x + new_gif_frame.shape[1], c] = \
                     overlay_img[new_gif_y:new_gif_y + new_gif_frame.shape[0], new_gif_x:new_gif_x + new_gif_frame.shape[1], c] * (1 - new_gif_frame[:, :, 3] / 255.0) + new_gif_frame[:, :, c] * (new_gif_frame[:, :, 3] / 255.0)
+
+                 # 检测 new_gif 和 new_image1 的碰撞
+            new_image1_x = (overlay_img.shape[1] - new_image1_resized.shape[1]) // 2
+            new_image1_y = (overlay_img.shape[0] - new_image1_resized.shape[0]) // 2 + 100
+    
+            if new_gif_x < new_image1_x + new_image1_resized.shape[1] and \
+               new_gif_x + new_gif_frame.shape[1] > new_image1_x and \
+               new_gif_y < new_image1_y + new_image1_resized.shape[0] and \
+               new_gif_y + new_gif_frame.shape[0] > new_image1_y:
+    
+                if not collision_detected:
+                    collision_detected = True
+                    collision_start_time = time.time()  # 记录碰撞开始时间
+                else:
+                    collision_duration += time.time() - collision_start_time
+                    collision_start_time = time.time()
+    
+            else:
+                collision_detected = False
+                collision_duration = 0  # 如果不再碰撞，重置累计时间
+    
+            # 如果累计时间超过3秒，将new_image1更改为new_image2
+            if collision_duration >= 3:
+                center_image_resized = new_image2_resized
+                new_image1_shown = False  # 停止显示 new_image1
+                rectangles_generation_allowed = True
+                new_image2_shown = True
+
+            
+            new_gif_index = (new_gif_index + 1) % len(new_gif_resized)
+            
             
             if new_gif_start_time is None:
                 new_gif_start_time = time.time()  # 记录播放开始时间
@@ -270,14 +332,9 @@ while True:
             new_gif_play_duration = time.time() - new_gif_start_time  # 计算播放时长
             new_gif_play_durations.append(new_gif_play_duration)  # 保存播放时长
             new_gif_start_time = time.time()  # 重置播放开始时间
-         # 新增条件检查播放次数
-        if new_gif_play_count >= 100: 
-            center_image_resized = new_image3_resized  # 更改为 new_image3
-            new_image1_shown = False  # 停止显示 new_gif
-            new_image3_shown = True  # 标记 new_image3 已经显示过
-            rectangles_generation_allowed = True  # 允许生成矩形
 
-        if rectangles_generation_allowed  and new_image3_shown: 
+
+        if rectangles_generation_allowed  and new_image2_shown: 
             current_time = time.time()
             if current_time - last_rectangle_generation_time >= rectangle_generation_interval:
                 last_rectangle_generation_time = current_time
