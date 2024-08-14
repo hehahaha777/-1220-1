@@ -132,6 +132,9 @@ rectangles_generation_allowed = False
 # 在定义变量的地方添加一个标志变量
 new_image3_shown = False  # 新增变量来标记 new_image3 是否已显示
 
+# 添加标志变量
+new_image1_shown = False
+
 
 # 手动和自动消除的计数器
 manual_clear_count = 0
@@ -234,6 +237,8 @@ while True:
         if center_image_elapsed_time >= 3 and not center_image_changed_to_first:
             center_image_resized = new_image1_resized
             center_image_changed_to_first = True
+            new_image1_shown = True  # 标记 new_image1 已经显示过
+            
         elif center_image_elapsed_time >= 7 and not center_image_changed_to_second:
             center_image_resized = new_image2_resized
             center_image_changed_to_second = True
@@ -245,7 +250,7 @@ while True:
             overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
                 center_image_resized[:, :, c] * (center_image_resized[:, :, 3] / 255.0) + overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] * (1 - center_image_resized[:, :, 3] / 255.0)
 
-        if new_image2_shown:
+        if new_image1_shown:
             new_gif_frame = new_gif_resized[new_gif_index]
             new_gif_x, new_gif_y = new_gif_position  # 使用新的位置坐标
 
@@ -268,7 +273,7 @@ while True:
          # 新增条件检查播放次数
         if new_gif_play_count >= 100: 
             center_image_resized = new_image3_resized  # 更改为 new_image3
-            new_image2_shown = False  # 停止显示 new_gif
+            new_image1_shown = False  # 停止显示 new_gif
             new_image3_shown = True  # 标记 new_image3 已经显示过
             rectangles_generation_allowed = True  # 允许生成矩形
 
