@@ -403,9 +403,11 @@ while True:
         if manual_clear_count >= 5:
             center_image_resized = manual_cleared_image_resized
             manual_clear_count = 0
+            rectangles_generation_allowed = False
         elif auto_clear_count >= 5:
             center_image_resized = auto_cleared_image_resized
             auto_clear_count = 0
+            rectangles_generation_allowed = False
 
     cv2.imshow('Final Overlay', overlay_img)
 
@@ -416,9 +418,3 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
-print(f"GIF播放次数: {gif_play_count}")
-print(f"new_gif播放次数: {new_gif_play_count}")  # 打印 new_gif 播放次数
-
-# 打印 new_gif 每次播放的时长
-for i, duration in enumerate(new_gif_play_durations):
-    print(f"new_gif 第 {i+1} 次播放时长: {duration:.2f} 秒")
