@@ -74,6 +74,10 @@ new_image3_path = r'C:\Users\User\Downloads\oho2.png'  # 这里替换成你的 n
 new_image3 = cv2.imread(new_image3_path, cv2.IMREAD_UNCHANGED)
 new_image3_resized = cv2.resize(new_image3, (100, 100))
 
+new_image4_path = r'C:\Users\User\Downloads\oho2.png'
+new_image4 = cv2.imread(new_image4_path, cv2.IMREAD_UNCHANGED)
+new_image4_resized = cv2.resize(new_image4, (20, 20))  # 调整大小以适合矩形位置
+
 # 加载手动和自动消除后图像
 manual_cleared_image_path = r'C:\Users\User\Downloads\sid.png'
 manual_cleared_image = cv2.imread(manual_cleared_image_path, cv2.IMREAD_UNCHANGED)
@@ -363,7 +367,15 @@ while True:
                     rectangle_position = (rect_x, rect_y)
 
                 if rectangle_position:
-                    cv2.rectangle(overlay_img, (rect_x - 10, rect_y - 10), (rect_x + 10, rect_y + 10), (0, 255, 0), -1)
+                    rect_x, rect_y = rectangle_position
+                    # 确保 new_image4 框不超出图像边界
+                    rect_x = max(0, min(rect_x, overlay_img.shape[1] - new_image4_resized.shape[1]))
+                    rect_y = max(0, min(rect_y, overlay_img.shape[0] - new_image4_resized.shape[0]))
+
+                    # 使用 new_image4 替换矩形
+                    for c in range(0, 3):
+                        overlay_img[rect_y:rect_y + new_image4_resized.shape[0], rect_x:rect_x + new_image4_resized.shape[1], c] = \
+                            overlay_img[rect_y:rect_y + new_image4_resized.shape[0], rect_x:rect_x + new_image4_resized.shape[1], c] * (1 - new_image4_resized[:, :, 3] / 255.0) + new_image4_resized[:, :, c] * (new_image4_resized[:, :, 3] / 255.0)
 
                 rectangle_cleared = False
                 if results.multi_hand_landmarks:
