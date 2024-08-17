@@ -78,6 +78,13 @@ new_image4_path = r'C:\Users\User\Downloads\oho2.png'
 new_image4 = cv2.imread(new_image4_path, cv2.IMREAD_UNCHANGED)
 new_image4_resized = cv2.resize(new_image4, (20, 20))  # 调整大小以适合矩形位置
 
+# 加载新的GIF图像并调整大小 (new_gif2)
+new_gif2_path = r'C:\Users\User\Downloads\goku.gif'
+new_gif2 = imageio.mimread(new_gif2_path)
+new_gif2 = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in new_gif2]
+new_gif2_resized = [cv2.resize(img, (100, 100)) for img in new_gif2]
+
+
 # 加载手动和自动消除后图像
 manual_cleared_image_path = r'C:\Users\User\Downloads\sid.png'
 manual_cleared_image = cv2.imread(manual_cleared_image_path, cv2.IMREAD_UNCHANGED)
@@ -148,6 +155,7 @@ auto_clear_count = 0
 new_gif_position = (0, 0)  # 你可以在这里调整位置坐标
 new_gif_x, new_gif_y = new_gif_position
 new_gif_attached = False
+new_gif2_index = 0
 
 # 初始化变量
 collision_start_time = None  # 用于记录碰撞开始时间
@@ -368,14 +376,16 @@ while True:
 
                 if rectangle_position:
                     rect_x, rect_y = rectangle_position
-                    # 确保 new_image4 框不超出图像边界
-                    rect_x = max(0, min(rect_x, overlay_img.shape[1] - new_image4_resized.shape[1]))
-                    rect_y = max(0, min(rect_y, overlay_img.shape[0] - new_image4_resized.shape[0]))
+                    # 确保 new_gif2 框不超出图像边界
+                    rect_x = max(0, min(rect_x, overlay_img.shape[1] - new_gif2_resized[0].shape[1]))
+                    rect_y = max(0, min(rect_y, overlay_img.shape[0] - new_gif2_resized[0].shape[0]))
 
-                    # 使用 new_image4 替换矩形
+                 # 使用 new_gif2 替换矩形
+                    new_gif2_index = (new_gif2_index + 1) % len(new_gif2_resized)
+                    new_gif2_frame = new_gif2_resized[new_gif2_index]                    
                     for c in range(0, 3):
-                        overlay_img[rect_y:rect_y + new_image4_resized.shape[0], rect_x:rect_x + new_image4_resized.shape[1], c] = \
-                            overlay_img[rect_y:rect_y + new_image4_resized.shape[0], rect_x:rect_x + new_image4_resized.shape[1], c] * (1 - new_image4_resized[:, :, 3] / 255.0) + new_image4_resized[:, :, c] * (new_image4_resized[:, :, 3] / 255.0)
+                        overlay_img[rect_y:rect_y + new_gif2_frame.shape[0], rect_x:rect_x + new_gif2_frame.shape[1], c] = \
+                            overlay_img[rect_y:rect_y + new_gif2_frame.shape[0], rect_x:rect_x + new_gif2_frame.shape[1], c] * (1 - new_gif2_frame[:, :, 3] / 255.0) + new_gif2_frame[:, :, c] * (new_gif2_frame[:, :, 3] / 255.0)
 
                 rectangle_cleared = False
                 if results.multi_hand_landmarks:
@@ -417,4 +427,3 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-
