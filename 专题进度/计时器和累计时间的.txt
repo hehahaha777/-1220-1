@@ -5,20 +5,27 @@ if delay_center_image and time.time() - start_time >= 3:
     color_detection_active = False
 这个计时器在颜色检测完成后，延迟 3 秒后停止颜色检测。
 
-2.这个计时器用于检测 GIF 与中心图像的重叠时间，3 秒后更改为 new_image1_resized，7 秒后更改为 new_image2_resized。
+2.这个计时器用于检测 GIF 与中心图像的重叠时间，3 秒后更改为 new_image1_resized（下雨gif）
 （gif碰到中心图像后的时间变动）
 if center_image_elapsed_time >= 3 and not center_image_changed_to_first:
     center_image_resized = new_image1_resized
     center_image_changed_to_first = True
-elif center_image_elapsed_time >= 7 and not center_image_changed_to_second:
-    center_image_resized = new_image2_resized
-    center_image_changed_to_second = True
-    show_rectangles = True
-    rectangles_generation_allowed = True
-    new_image2_shown = True
 
-3.这个计时器用于记录 new_gif 每次播放的时长，并且在播放次数达到 100 次后，将中心图像更改为 new_image3_resized。
-(有bug)
-if new_gif_play_count >= 100:
-    center_image_resized = new_image3_resized
-    new_image2_shown = False
+3.这个计时器用于检测 GIF 与中心图像的重叠时间，3 秒后更改为 new_image1_resized (太阳gif)
+  if collision_duration >= 3:
+                center_image_resized = new_image2_resized
+                new_image1_shown = False  # 停止显示 new_image1
+                rectangles_generation_allowed = True
+                new_image2_shown = True
+4.这个计数器用于计算手部清除几个，并且切换为 manual_cleared_image_resized
+  if manual_clear_count >= 5:
+            center_image_resized = manual_cleared_image_resized
+            manual_clear_count = 0
+            rectangles_generation_allowed = False
+5.这个是计时器用于检测矩形是否有到对应的地方，到了后开始计时5秒没被清除，就换图像为auto_cleared_image_resized
+if time_at_target and (time.time() - time_at_target >= 5):
+                    center_image_resized = auto_cleared_image_resized
+                    time_at_target = None  # 重置时间戳，避免重复替换
+                    rectangles_generation_allowed = False
+
+
