@@ -3,10 +3,22 @@ import numpy as np
 import imageio
 import time
 import mediapipe as mp
+import subprocess
+import random
+import sys
+
 
 # 设置颜色范围
 lower = np.array([25, 30, 110])
 upper = np.array([80, 70, 180])
+
+
+# 三种影片的路径
+videos = [
+    r'C:\Users\User\Downloads\1.mp4',
+    r'C:\Users\User\Downloads\2.mp4',
+    r'C:\Users\User\Downloads\3.mp4'
+]
 
 def generateSeedModel(img, contours, png_img_resized):
     seed_model_shown = False
@@ -174,6 +186,8 @@ center_threshold = 10
 # 在矩形位置的代码逻辑之外，定义一个变量来存储时间戳
 time_at_target = None
 
+# 新增变量来标记窗口是否已关闭
+window_closed = False
 
 
 while True:
@@ -399,6 +413,15 @@ while True:
                     time_at_target = None  # 重置时间戳，避免重复替换
                     rectangles_generation_allowed = False
 
+
+                    
+                    # 随机选择一个影片q
+                    selected_video = random.choice(videos)
+                    print(f"正在播放: {selected_video}")
+                    # 使用系统默认播放器播放影片
+                    subprocess.run(["start", selected_video], shell=True)
+                    
+
                     
                 if rectangle_position:
                     rect_x, rect_y = rectangle_position
@@ -433,10 +456,20 @@ while True:
             center_image_resized = manual_cleared_image_resized
             manual_clear_count = 0
             rectangles_generation_allowed = False
-      
+            
 
+
+             # 随机选择一个影片q
+            selected_video = random.choice(videos)
+            
+            print(f"正在播放: {selected_video}")
+            
+            # 使用系统默认播放器播放影片
+            subprocess.run(["start", selected_video], shell=True)
+              
+    
     cv2.imshow('Final Overlay', overlay_img)
-
+    
     key = cv2.waitKey(1)
     if key == ord('q'):
         break
