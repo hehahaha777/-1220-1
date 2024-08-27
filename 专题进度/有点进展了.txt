@@ -6,6 +6,8 @@ import mediapipe as mp
 import subprocess
 import random
 import sys
+import threading
+
 
 
 # 设置颜色范围
@@ -20,6 +22,16 @@ videos = [
     r'C:\Users\User\Downloads\3.mp4'
 ]
 
+
+def play_video():
+    # 随机选择一个影片
+    selected_video = random.choice(videos)
+    
+    print(f"正在播放: {selected_video}")
+    
+    # 使用系统默认播放器播放影片
+    subprocess.run(["start", selected_video], shell=True)
+    
 def generateSeedModel(img, contours, png_img_resized):
     seed_model_shown = False
     for contour in contours:
@@ -412,14 +424,12 @@ while True:
                     center_image_resized = auto_cleared_image_resized
                     time_at_target = None  # 重置时间戳，避免重复替换
                     rectangles_generation_allowed = False
+                
+                 # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
+                    timer = threading.Timer(5, play_video)
+                    timer.start()
 
-
-                    
-                    # 随机选择一个影片q
-                    selected_video = random.choice(videos)
-                    print(f"正在播放: {selected_video}")
-                    # 使用系统默认播放器播放影片
-                    subprocess.run(["start", selected_video], shell=True)
+            
                     
 
                     
@@ -457,15 +467,10 @@ while True:
             manual_clear_count = 0
             rectangles_generation_allowed = False
             
+         # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
+            timer = threading.Timer(5, play_video)
+            timer.start()
 
-
-             # 随机选择一个影片q
-            selected_video = random.choice(videos)
-            
-            print(f"正在播放: {selected_video}")
-            
-            # 使用系统默认播放器播放影片
-            subprocess.run(["start", selected_video], shell=True)
               
     
     cv2.imshow('Final Overlay', overlay_img)
