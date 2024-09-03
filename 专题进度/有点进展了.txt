@@ -15,7 +15,7 @@ lower = np.array([25, 30, 110])
 upper = np.array([80, 70, 180])
 
 
-# 三种影片的路径
+# 三种影片的路径 这三个影片对应的就是最终花豆呈现的东西
 videos = [
     r'C:\Users\User\Downloads\1.mp4',
     r'C:\Users\User\Downloads\2.mp4',
@@ -51,20 +51,20 @@ def generateSeedModel(img, contours, png_img_resized):
     return seed_model_shown
 
 # 加载带有透明度的PNG图像（RGBA）并调整大小
-png_img_path = r'C:\Users\User\Downloads\seed.png'
+png_img_path = r'C:\Users\User\Downloads\zong.png' #这个是放一开始的种子出现在画面里的
 png_img = cv2.imread(png_img_path, cv2.IMREAD_UNCHANGED)
 desired_width = 30
 desired_height = 30
 png_img_resized = cv2.resize(png_img, (desired_width, desired_height))
 
 # 加载GIF图像
-gif_path = r'C:\Users\User\Downloads\下雨.gif'
+gif_path = r'C:\Users\User\Downloads\云朵.gif'   #这个是放下雨的gif
 gif = imageio.mimread(gif_path)
 gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
 gif_resized = [cv2.resize(img, (100, 100)) for img in gif]
 
 # 加载新的GIF图像
-new_gif_path = r'C:\Users\User\Downloads\goku.gif'
+new_gif_path = r'C:\Users\User\Downloads\太阳.gif'  # 这个是放太阳的gif
 new_gif = imageio.mimread(new_gif_path)
 new_gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in new_gif]
 new_gif_resized = [cv2.resize(img, (100, 100)) for img in new_gif]
@@ -81,29 +81,23 @@ new_gif_start_time = None  # 用于跟踪播放开始时间
 new_image2_shown = False
 
 # 加载中心图像
-center_image_path = r'C:\Users\User\Downloads\oho2.png'
+center_image_path = r'C:\Users\User\Downloads\zong.png'  #这个是放会出现中心图像的种子的
 center_image = cv2.imread(center_image_path, cv2.IMREAD_UNCHANGED)
 center_image_resized = cv2.resize(center_image, (100, 100))
 
 # 加载新的图像
-new_image1_path = r'C:\Users\User\Downloads\f22.png'
+new_image1_path = r'C:\Users\User\Downloads\f22.png'  #这个是放当被云朵淋雨后出现的花朵
 new_image1 = cv2.imread(new_image1_path, cv2.IMREAD_UNCHANGED)
 new_image1_resized = cv2.resize(new_image1, (100, 100))
 
-new_image2_path = r'C:\Users\User\Downloads\f33.png'
+new_image2_path = r'C:\Users\User\Downloads\f33.png' #这个是放被太阳晒过后出现的花朵?
 new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
 new_image2_resized = cv2.resize(new_image2, (100, 100))
 
-new_image3_path = r'C:\Users\User\Downloads\oho2.png'  # 这里替换成你的 new_image3 的路径
-new_image3 = cv2.imread(new_image3_path, cv2.IMREAD_UNCHANGED)
-new_image3_resized = cv2.resize(new_image3, (100, 100))
 
-new_image4_path = r'C:\Users\User\Downloads\oho2.png'
-new_image4 = cv2.imread(new_image4_path, cv2.IMREAD_UNCHANGED)
-new_image4_resized = cv2.resize(new_image4, (20, 20))  # 调整大小以适合矩形位置
 
 # 加载新的GIF图像并调整大小 (new_gif2)
-new_gif2_path = r'C:\Users\User\Downloads\goku.gif'
+new_gif2_path = r'C:\Users\User\Downloads\虫子.gif'
 new_gif2 = imageio.mimread(new_gif2_path)
 new_gif2 = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in new_gif2]
 new_gif2_resized = [cv2.resize(img, (100, 100)) for img in new_gif2]
