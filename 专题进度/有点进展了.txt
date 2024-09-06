@@ -366,6 +366,7 @@ while True:
                 new_image1_shown = False  # 停止显示 new_image1
                 rectangles_generation_allowed = True
                 new_image2_shown = True
+                new_gif = False
 
             
             new_gif_index = (new_gif_index + 1) % len(new_gif_resized)
