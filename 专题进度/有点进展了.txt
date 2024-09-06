@@ -195,6 +195,9 @@ time_at_target = None
 # 新增变量来标记窗口是否已关闭
 window_closed = False
 
+gif_visible = True  # 新增变量，控制GIF是否显示
+
+
 
 while True:
     ret, img = cap.read()
@@ -223,19 +226,21 @@ while True:
 
     if show_center_image and not delay_center_image:
         overlay_img = np.zeros_like(img)
-        gif_frame = gif_resized[gif_index]
+        if gif_visible and not new_image1_shown:  # 只有在 gif_visible 为 True 且 new_image1 未显示时，才显示 GIF
 
-        # 显示GIF在手指末端或最后位置
-        gif_x, gif_y = gif_last_position
-
-        # 确保 GIF 框不超出图像边界
-        gif_x = max(0, min(gif_x, overlay_img.shape[1] - gif_frame.shape[1]))
-        gif_y = max(0, min(gif_y, overlay_img.shape[0] - gif_frame.shape[0]))
-
-        # 叠加GIF图像
-        for c in range(0, 3):
-            overlay_img[gif_y:gif_y + gif_frame.shape[0], gif_x:gif_x + gif_frame.shape[1], c] = \
-                overlay_img[gif_y:gif_y + gif_frame.shape[0], gif_x:gif_x + gif_frame.shape[1], c] * (1 - gif_frame[:, :, 3] / 255.0) + gif_frame[:, :, c] * (gif_frame[:, :, 3] / 255.0)
+            gif_frame = gif_resized[gif_index]
+    
+            # 显示GIF在手指末端或最后位置
+            gif_x, gif_y = gif_last_position
+    
+            # 确保 GIF 框不超出图像边界
+            gif_x = max(0, min(gif_x, overlay_img.shape[1] - gif_frame.shape[1]))
+            gif_y = max(0, min(gif_y, overlay_img.shape[0] - gif_frame.shape[0]))
+    
+            # 叠加GIF图像
+            for c in range(0, 3):
+                overlay_img[gif_y:gif_y + gif_frame.shape[0], gif_x:gif_x + gif_frame.shape[1], c] = \
+                    overlay_img[gif_y:gif_y + gif_frame.shape[0], gif_x:gif_x + gif_frame.shape[1], c] * (1 - gif_frame[:, :, 3] / 255.0) + gif_frame[:, :, c] * (gif_frame[:, :, 3] / 255.0)
 
         # 手部检测
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -291,7 +296,8 @@ while True:
             center_image_resized = new_image1_resized
             center_image_changed_to_first = True
             new_image1_shown = True  # 标记 new_image1 已经显示过
-      
+            gif_visible = False
+
 
         for c in range(0, 3):
             overlay_img[center_y:center_y + center_image_resized.shape[0], center_x:center_x + center_image_resized.shape[1], c] = \
