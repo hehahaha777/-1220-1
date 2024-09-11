@@ -3,6 +3,10 @@ import numpy as np
 import imageio
 import time
 import mediapipe as mp
+import subprocess
+import random
+import sys
+import threading
 
 # 设置颜色范围
 lower = np.array([25, 30, 110])
@@ -175,8 +179,19 @@ window_closed = False
 gif_visible = True  # 新增变量，控制GIF是否显示
 
 
-def play_video(video_path):
+def play_random_video():
+    video_paths = [
+        r'C:\Users\User\Downloads\1.mp4',
+        r'C:\Users\User\Downloads\2.mp4',
+        r'C:\Users\User\Downloads\3.mp4'
+    ]
+
+    # 随机选择一个视频路径
+    video_path = random.choice(video_paths)
     cap_video = cv2.VideoCapture(video_path)
+    print(f"正在播放: {video_path}")
+
+
     if not cap_video.isOpened():
         print(f"无法打开视频文件：{video_path}")
         return
@@ -198,8 +213,6 @@ def play_video(video_path):
 
     cap_video.release()
     cv2.destroyAllWindows()
-
-
 
 while True:
     ret, img = cap.read()
@@ -427,10 +440,11 @@ while True:
                     center_image_resized = auto_cleared_image_resized
                     time_at_target = None  # 重置时间戳，避免重复替换
                     rectangles_generation_allowed = False
-                
-                                    # 播放指定视频
-                    video_path =  r'C:\Users\User\Downloads\liubi.mp4'  # 请将此路径替换为您实际的视频文件路径
-                    play_video(video_path)
+                    
+                    
+                    # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
+                    timer = threading.Timer(5, play_random_video)
+                    timer.start()
     
 
             
@@ -471,10 +485,11 @@ while True:
             manual_clear_count = 0
             rectangles_generation_allowed = False
             
-                   # 播放指定视频
-            video_path =  r'C:\Users\User\Downloads\liubi.mp4'  # 请将此路径替换为您实际的视频文件路径
-            play_video(video_path)
-    
+                   
+        # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
+            timer = threading.Timer(5, play_random_video)
+            timer.start()
+
 
     cv2.imshow('Final Overlay', overlay_img)
 
