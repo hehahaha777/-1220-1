@@ -58,10 +58,10 @@ desired_height = 100
 png_img_resized = cv2.resize(png_img, (desired_width, desired_height))
 
 # 加载GIF图像
-gif_path = r'C:\Users\User\Downloads\yundou1.gif'   #这个是放下雨的gif
-gif = imageio.mimread(gif_path)
+gif_path = r'C:\Users\User\Downloads\yundou1.1.gif'   #这个是放下雨的gif
+gif = imageio.mimread(gif_path, memtest=False)
 gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
-gif_resized = [cv2.resize(img, (100, 100)) for img in gif]
+gif_resized = [cv2.resize(img, (200, 100)) for img in gif]
 
 # 加载新的GIF图像
 new_gif_path = r'C:\Users\User\Downloads\taiyan1.gif'  # 这个是放太阳的gif
