@@ -181,9 +181,9 @@ gif_visible = True  # 新增变量，控制GIF是否显示
 
 def play_random_video():
     video_paths = [
-        r'C:\Users\User\Downloads\1.mp4',
-        r'C:\Users\User\Downloads\2.mp4',
-        r'C:\Users\User\Downloads\3.mp4'
+        r'C:\Users\User\Downloads\lily.mkv',
+        r'C:\Users\User\Downloads\sunflower.mkv',
+        r'C:\Users\User\Downloads\daisy.mkv'
     ]
 
     # 随机选择一个视频路径
