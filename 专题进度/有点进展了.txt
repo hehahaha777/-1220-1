@@ -8,30 +8,10 @@ import random
 import sys
 import threading
 
-
-
 # 设置颜色范围
 lower = np.array([25, 30, 110])
 upper = np.array([80, 70, 180])
 
-
-# 三种影片的路径 这三个影片对应的就是最终花豆呈现的东西
-videos = [
-    r'C:\Users\User\Downloads\1.mp4',
-    r'C:\Users\User\Downloads\2.mp4',
-    r'C:\Users\User\Downloads\3.mp4'
-]
-
-
-def play_video():
-    # 随机选择一个影片
-    selected_video = random.choice(videos)
-    
-    print(f"正在播放: {selected_video}")
-    
-    # 使用系统默认播放器播放影片
-    subprocess.run(["start", selected_video], shell=True)
-    
 def generateSeedModel(img, contours, png_img_resized):
     seed_model_shown = False
     for contour in contours:
@@ -51,7 +31,7 @@ def generateSeedModel(img, contours, png_img_resized):
     return seed_model_shown
 
 # 加载带有透明度的PNG图像（RGBA）并调整大小
-png_img_path = r'C:\Users\User\Downloads\zongzi1.png' #这个是放一开始的种子出现在画面里的
+png_img_path = r'C:\Users\User\Downloads\zongzi1.png'
 png_img = cv2.imread(png_img_path, cv2.IMREAD_UNCHANGED)
 desired_width = 100
 desired_height = 100
@@ -64,7 +44,7 @@ gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
 gif_resized = [cv2.resize(img, (200, 100)) for img in gif]
 
 # 加载新的GIF图像
-new_gif_path = r'C:\Users\User\Downloads\taiyan1.gif'  # 这个是放太阳的gif
+new_gif_path = r'C:\Users\User\Downloads\taiyan1.gif'
 new_gif = imageio.mimread(new_gif_path)
 new_gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in new_gif]
 new_gif_resized = [cv2.resize(img, (100, 100)) for img in new_gif]
@@ -94,8 +74,6 @@ new_image2_path = r'C:\Users\User\Downloads\f33.png' #这个是放被太阳晒�
 new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
 new_image2_resized = cv2.resize(new_image2, (100, 100))
 
-
-
 # 加载新的GIF图像并调整大小 (new_gif2)
 new_gif2_path = r'C:\Users\User\Downloads\chongzi1.gif'
 new_gif2 = imageio.mimread(new_gif2_path)
@@ -111,6 +89,9 @@ manual_cleared_image_resized = cv2.resize(manual_cleared_image, (100, 100))
 auto_cleared_image_path = r'C:\Users\User\Downloads\f44.png'
 auto_cleared_image = cv2.imread(auto_cleared_image_path, cv2.IMREAD_UNCHANGED)
 auto_cleared_image_resized = cv2.resize(auto_cleared_image, (100, 100))
+
+
+
 
 # 初始化MediaPipe手部检测
 mp_hands = mp.solutions.hands
@@ -134,7 +115,7 @@ delay_center_image = False
 color_detection_active = True
 
 # 初始化GIF位置
-gif_initial_position = (270, 80)
+gif_initial_position = (210, 80)
 gif_last_position = gif_initial_position
 gif_attached = False
 
@@ -198,6 +179,40 @@ window_closed = False
 gif_visible = True  # 新增变量，控制GIF是否显示
 
 
+def play_random_video():
+    video_paths = [
+        r'C:\Users\User\Downloads\1.mp4',
+        r'C:\Users\User\Downloads\2.mp4',
+        r'C:\Users\User\Downloads\3.mp4'
+    ]
+
+    # 随机选择一个视频路径
+    video_path = random.choice(video_paths)
+    cap_video = cv2.VideoCapture(video_path)
+    print(f"正在播放: {video_path}")
+
+
+    if not cap_video.isOpened():
+        print(f"无法打开视频文件：{video_path}")
+        return
+
+    cv2.namedWindow('Video Playback', cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty('Video Playback', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    while True:
+        ret, frame = cap_video.read()
+        if not ret:
+            print("视频播放结束或无法读取帧。")
+            break
+
+        cv2.imshow('Video Playback', frame)
+
+        # 按下 'q' 键退出视频播放
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            break
+
+    cap_video.release()
+    cv2.destroyAllWindows()
 
 while True:
     ret, img = cap.read()
@@ -425,10 +440,12 @@ while True:
                     center_image_resized = auto_cleared_image_resized
                     time_at_target = None  # 重置时间戳，避免重复替换
                     rectangles_generation_allowed = False
-                
-                 # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
-                    timer = threading.Timer(5, play_video)
+                    
+                    
+                    # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
+                    timer = threading.Timer(5, play_random_video)
                     timer.start()
+    
 
             
                     
@@ -468,14 +485,14 @@ while True:
             manual_clear_count = 0
             rectangles_generation_allowed = False
             
-         # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
-            timer = threading.Timer(5, play_video)
+                   
+        # 使用 threading.Timer 延迟5秒钟执行播放视频的函数
+            timer = threading.Timer(5, play_random_video)
             timer.start()
 
-              
-    
+
     cv2.imshow('Final Overlay', overlay_img)
-    
+
     key = cv2.waitKey(1)
     if key == ord('q'):
         break
