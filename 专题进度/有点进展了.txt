@@ -66,13 +66,13 @@ center_image = cv2.imread(center_image_path, cv2.IMREAD_UNCHANGED)
 center_image_resized = cv2.resize(center_image, (100, 100))
 
 # 加载新的图像
-new_image1_path = r'C:\Users\User\Downloads\f22.png'  #这个是放当被云朵淋雨后出现的花朵
+new_image1_path = r'C:\Users\User\Downloads\h1.png'  #这个是放当被云朵淋雨后出现的花朵
 new_image1 = cv2.imread(new_image1_path, cv2.IMREAD_UNCHANGED)
-new_image1_resized = cv2.resize(new_image1, (100, 100))
+new_image1_resized = cv2.resize(new_image1, (200, 100))
 
-new_image2_path = r'C:\Users\User\Downloads\f33.png' #这个是放被太阳晒过后出现的花朵?
+new_image2_path = r'C:\Users\User\Downloads\h2.png' #这个是放被太阳晒过后出现的花朵?
 new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
-new_image2_resized = cv2.resize(new_image2, (100, 100))
+new_image2_resized = cv2.resize(new_image2, (200, 100))
 
 # 加载新的GIF图像并调整大小 (new_gif2)
 new_gif2_path = r'C:\Users\User\Downloads\圈圈.gif'
@@ -82,9 +82,9 @@ new_gif2_resized = [cv2.resize(img, (100, 100)) for img in new_gif2]
 
 
 # 加载手动和自动消除后图像
-manual_cleared_image_path = r'C:\Users\User\Downloads\newflower1.png'
+manual_cleared_image_path = r'C:\Users\User\Downloads\h3.png'
 manual_cleared_image = cv2.imread(manual_cleared_image_path, cv2.IMREAD_UNCHANGED)
-manual_cleared_image_resized = cv2.resize(manual_cleared_image, (100, 100))
+manual_cleared_image_resized = cv2.resize(manual_cleared_image, (200, 100))
 
 auto_cleared_image_path = r'C:\Users\User\Downloads\f44.png'
 auto_cleared_image = cv2.imread(auto_cleared_image_path, cv2.IMREAD_UNCHANGED)
