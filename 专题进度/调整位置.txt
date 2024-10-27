@@ -1,0 +1,8 @@
+这个是调整亮亮gif的位置
+gif_initial_position = (210, 30)
+
+
+这个是调整new_image1，new_image2，manual_cleared_image_path，auto_cleared_image_path
+ # 检查 gif 与 center_image 的碰撞
+        center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2 
+        center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 20

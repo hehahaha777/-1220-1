@@ -88,7 +88,7 @@ manual_cleared_image_resized = cv2.resize(manual_cleared_image, (200, 100))
 
 auto_cleared_image_path = r'C:\Users\User\Downloads\f44.png'
 auto_cleared_image = cv2.imread(auto_cleared_image_path, cv2.IMREAD_UNCHANGED)
-auto_cleared_image_resized = cv2.resize(auto_cleared_image, (100, 100))
+auto_cleared_image_resized = cv2.resize(auto_cleared_image, (200, 100))
 
 
 
@@ -115,7 +115,7 @@ delay_center_image = False
 color_detection_active = True
 
 # 初始化GIF位置
-gif_initial_position = (210, 80)
+gif_initial_position = (210, 30)
 gif_last_position = gif_initial_position
 gif_attached = False
 
@@ -296,7 +296,7 @@ while True:
 
         # 检查 gif 与 center_image 的碰撞
         center_x = (overlay_img.shape[1] - center_image_resized.shape[1]) // 2 
-        center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 100
+        center_y = (overlay_img.shape[0] - center_image_resized.shape[0]) // 2 + 20
         if gif_x < center_x + center_image_resized.shape[1] and gif_x + gif_frame.shape[1] > center_x and gif_y < center_y + center_image_resized.shape[0] and gif_y + gif_frame.shape[0] > center_y:
             if center_image_change_start_time is None:
                 center_image_change_start_time = time.time()
