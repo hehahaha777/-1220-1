@@ -86,9 +86,21 @@ manual_cleared_image_path = r'C:\Users\User\Downloads\h3.png'
 manual_cleared_image = cv2.imread(manual_cleared_image_path, cv2.IMREAD_UNCHANGED)
 manual_cleared_image_resized = cv2.resize(manual_cleared_image, (200, 100))
 
-auto_cleared_image_path = r'C:\Users\User\Downloads\f44.png'
+# 加载手动和自动消除后图像
+manual_cleared_image1_path = r'C:\Users\User\Downloads\flow3-2.png'
+manual_cleared_image1 = cv2.imread(manual_cleared_image1_path, cv2.IMREAD_UNCHANGED)
+manual_cleared_image1_resized = cv2.resize(manual_cleared_image1, (200, 100))
+
+auto_cleared_image_path = r'C:\Users\User\Downloads\flow2-1.png'
 auto_cleared_image = cv2.imread(auto_cleared_image_path, cv2.IMREAD_UNCHANGED)
 auto_cleared_image_resized = cv2.resize(auto_cleared_image, (200, 100))
+
+#                                                             
+#auto_cleared_image1_path = r'C:\Users\User\Downloads\h2-3.png'
+#auto_cleared_image1 = cv2.imread(auto_cleared_image1_path, cv2.IMREAD_UNCHANGED)
+#auto_cleared_image1_resized = cv2.resize(auto_cleared_image1, (200, 100))
+
+
 
 
 
@@ -436,6 +448,7 @@ while True:
                     if time_at_target is None:
                         time_at_target = time.time()
                     # 检查是否已经到达目标位置，并且时间已经过去了5秒
+               
                 if time_at_target and (time.time() - time_at_target >= 5):
                     center_image_resized = auto_cleared_image_resized
                     time_at_target = None  # 重置时间戳，避免重复替换
@@ -480,8 +493,11 @@ while True:
                    
                       
 
-        if manual_clear_count >= 5:
+        if manual_clear_count >= 3:
             center_image_resized = manual_cleared_image_resized
+        
+        if manual_clear_count >= 5:
+            center_image_resized = manual_cleared_image1_resized
             manual_clear_count = 0
             rectangles_generation_allowed = False
             
