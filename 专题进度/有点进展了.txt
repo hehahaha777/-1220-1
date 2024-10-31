@@ -236,7 +236,6 @@ def play_random_video():
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
        # 视频播放结束后向 Processing 发送信息
-    send_data_to_processing("video_finished")        
 
     cap_video.release()
     cv2.destroyAllWindows()
