@@ -7,10 +7,13 @@ import subprocess
 import random
 import sys
 import threading
-
+import socket
 # 设置颜色范围
 lower = np.array([25, 30, 110])
 upper = np.array([80, 70, 180])
+
+
+
 
 def generateSeedModel(img, contours, png_img_resized):
     seed_model_shown = False
@@ -66,11 +69,11 @@ center_image = cv2.imread(center_image_path, cv2.IMREAD_UNCHANGED)
 center_image_resized = cv2.resize(center_image, (100, 100))
 
 # 加载新的图像
-new_image1_path = r'C:\Users\User\Downloads\h1.png'  #这个是放当被云朵淋雨后出现的花朵
+new_image1_path = r'C:\Users\User\Downloads\flow1.png'  #这个是放当被云朵淋雨后出现的花朵
 new_image1 = cv2.imread(new_image1_path, cv2.IMREAD_UNCHANGED)
 new_image1_resized = cv2.resize(new_image1, (200, 100))
 
-new_image2_path = r'C:\Users\User\Downloads\h2.png' #这个是放被太阳晒过后出现的花朵?
+new_image2_path = r'C:\Users\User\Downloads\flow1-2.png' #这个是放被太阳晒过后出现的花朵?
 new_image2 = cv2.imread(new_image2_path, cv2.IMREAD_UNCHANGED)
 new_image2_resized = cv2.resize(new_image2, (200, 100))
 
@@ -82,14 +85,24 @@ new_gif2_resized = [cv2.resize(img, (100, 100)) for img in new_gif2]
 
 
 # 加载手动和自动消除后图像
-manual_cleared_image_path = r'C:\Users\User\Downloads\h3.png'
-manual_cleared_image = cv2.imread(manual_cleared_image_path, cv2.IMREAD_UNCHANGED)
-manual_cleared_image_resized = cv2.resize(manual_cleared_image, (200, 100))
+manual_cleared_image0_path = r'C:\Users\User\Downloads\flow2-1.png'
+manual_cleared_image0 = cv2.imread(manual_cleared_image0_path, cv2.IMREAD_UNCHANGED)
+manual_cleared_image0_resized = cv2.resize(manual_cleared_image0, (200, 100))
 
 # 加载手动和自动消除后图像
-manual_cleared_image1_path = r'C:\Users\User\Downloads\flow3-2.png'
+manual_cleared_image1_path = r'C:\Users\User\Downloads\flow2-2.png'
 manual_cleared_image1 = cv2.imread(manual_cleared_image1_path, cv2.IMREAD_UNCHANGED)
 manual_cleared_image1_resized = cv2.resize(manual_cleared_image1, (200, 100))
+
+# 加载手动和自动消除后图像
+manual_cleared_image2_path = r'C:\Users\User\Downloads\flow3-1.png'
+manual_cleared_image2 = cv2.imread(manual_cleared_image2_path, cv2.IMREAD_UNCHANGED)
+manual_cleared_image2_resized = cv2.resize(manual_cleared_image2, (200, 100))
+
+# 加载手动和自动消除后图像
+manual_cleared_image3_path = r'C:\Users\User\Downloads\flow3-2.png'
+manual_cleared_image3 = cv2.imread(manual_cleared_image3_path, cv2.IMREAD_UNCHANGED)
+manual_cleared_image3_resized = cv2.resize(manual_cleared_image3, (200, 100))
 
 auto_cleared_image_path = r'C:\Users\User\Downloads\flow2-1.png'
 auto_cleared_image = cv2.imread(auto_cleared_image_path, cv2.IMREAD_UNCHANGED)
@@ -222,6 +235,8 @@ def play_random_video():
         # 按下 'q' 键退出视频播放
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
+       # 视频播放结束后向 Processing 发送信息
+    send_data_to_processing("video_finished")        
 
     cap_video.release()
     cv2.destroyAllWindows()
@@ -394,7 +409,7 @@ while True:
                 collision_duration = 0  # 如果不再碰撞，重置累计时间
     
             # 如果累计时间超过3秒，将new_image1更改为new_image2
-            if collision_duration >= 3:
+            if collision_duration >= 1:
                 center_image_resized = new_image2_resized
                 new_image1_shown = False  # 停止显示 new_image1
                 rectangles_generation_allowed = True
@@ -492,12 +507,17 @@ while True:
     
                    
                       
+        if manual_clear_count >= 1:
+            center_image_resized = manual_cleared_image0_resized
 
+        if manual_clear_count >= 2:
+            center_image_resized = manual_cleared_image1_resized
+      
         if manual_clear_count >= 3:
-            center_image_resized = manual_cleared_image_resized
+            center_image_resized = manual_cleared_image2_resized
         
         if manual_clear_count >= 5:
-            center_image_resized = manual_cleared_image1_resized
+            center_image_resized = manual_cleared_image3_resized
             manual_clear_count = 0
             rectangles_generation_allowed = False
             
