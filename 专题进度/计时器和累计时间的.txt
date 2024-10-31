@@ -28,4 +28,5 @@ if time_at_target and (time.time() - time_at_target >= 5):
                     time_at_target = None  # 重置时间戳，避免重复替换
                     rectangles_generation_allowed = False
 
-
+6.矩形速度
+rectangle_velocity = 20
