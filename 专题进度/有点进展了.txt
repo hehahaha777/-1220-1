@@ -202,8 +202,13 @@ window_closed = False
 gif_visible = True  # 新增变量，控制GIF是否显示
 
 # 设置服务器信息
-host = 'localhost'
+host = '192.168.0.131'  # 替换为Processing服务器的IP地址
 port = 12345
+
+
+# 创建Socket对象
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 
 
 def play_random_video():
@@ -237,8 +242,8 @@ def play_random_video():
 
         # 检查播放时间是否达到24秒
         elapsed_time = time.time() - start_time
-        if elapsed_time >= 22:
-            print("视频播放了22秒，发送信息到 Processing。")
+        if elapsed_time >= 20:
+            print("视频播放了20秒，发送信息到 Processing。")
 
             # 发送信息到 Processing
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

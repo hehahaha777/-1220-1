@@ -30,3 +30,12 @@ if time_at_target and (time.time() - time_at_target >= 5):
 
 6.矩形速度
 rectangle_velocity = 20
+
+7.影片具体播放几秒后才会丢给processing
+ if elapsed_time >= 20:
+            print("视频播放了20秒，发送信息到 Processing。")
+
+8.在出现最后一个图像后，要多久才会开始播放视频
+  timer = threading.Timer(5, play_random_video)
+            timer.start()
+            
