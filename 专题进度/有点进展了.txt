@@ -39,10 +39,10 @@ desired_height = 100
 png_img_resized = cv2.resize(png_img, (desired_width, desired_height))
 
 # 加载GIF图像
-gif_path = r'C:\Users\User\Downloads\亮亮.gif'   #这个是放下雨的gif
+gif_path = r'C:\Users\User\Downloads\亮亮2.gif'   #这个是放下雨的gif
 gif = imageio.mimread(gif_path, memtest=False)
 gif = [cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA) for img in gif]
-gif_resized = [cv2.resize(img, (200, 100)) for img in gif]
+gif_resized = [cv2.resize(img, (250, 200)) for img in gif]
 
 # 加载新的GIF图像
 new_gif_path = r'C:\Users\User\Downloads\星星.gif'
@@ -138,7 +138,7 @@ delay_center_image = False
 color_detection_active = True
 
 # 初始化GIF位置
-gif_initial_position = (210, 30)
+gif_initial_position = (400, 200)
 gif_last_position = gif_initial_position
 gif_attached = False
 
@@ -202,7 +202,7 @@ window_closed = False
 gif_visible = True  # 新增变量，控制GIF是否显示
 
 # 设置服务器信息
-host = '192.168.0.131'  # 替换为Processing服务器的IP地址
+host = 'MSI'  # 替换为Processing服务器的IP地址
 port = 12345
 
 
@@ -242,7 +242,7 @@ def play_random_video():
 
         # 检查播放时间是否达到24秒
         elapsed_time = time.time() - start_time
-        if elapsed_time >= 20:
+        if elapsed_time >= 19:
             print("视频播放了20秒，发送信息到 Processing。")
 
             # 发送信息到 Processing
