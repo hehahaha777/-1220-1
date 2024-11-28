@@ -123,7 +123,7 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
 # 开始捕获来自摄像头的视频
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("无法打开摄像头")
     exit()
@@ -532,7 +532,7 @@ while True:
                    
                       
         if manual_clear_count >= 1:
-            center_imag·e_resized = manual_cleared_image0_resized
+            center_image_resized = manual_cleared_image0_resized
 
         if manual_clear_count >= 2:
             center_image_resized = manual_cleared_image1_resized
