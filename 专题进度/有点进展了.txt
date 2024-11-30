@@ -9,6 +9,15 @@ import sys
 import threading
 import socket
 import IPython
+import pygame
+
+# 初始化 Pygame 用于播放音效
+pygame.mixer.init()
+sound = pygame.mixer.Sound("12902.mp3")  # 替换为你的音效文件路径
+sound_played = False
+sound1 = pygame.mixer.Sound("9586.mp3")  # 替换为你的音效文件路径
+sound1_played = False
+
 
 # 设置颜色范围
 lower = np.array([25, 30, 110])
@@ -351,6 +360,11 @@ while True:
         if gif_x < center_x + center_image_resized.shape[1] and gif_x + gif_frame.shape[1] > center_x and gif_y < center_y + center_image_resized.shape[0] and gif_y + gif_frame.shape[0] > center_y:
             if center_image_change_start_time is None:
                 center_image_change_start_time = time.time()
+                if not sound_played:
+                    sound.play()  # 播放音效
+                    sound_played = True  # 确保只播放一次音效
+                else:
+                    sound_played = False  # 碰撞结束时重置标志
             else:
                 center_image_elapsed_time += time.time() - center_image_change_start_time
                 center_image_change_start_time = time.time()
@@ -423,6 +437,8 @@ while True:
     
                 if not collision_detected:
                     collision_detected = True
+                    sound1.play()
+                    sound1_played = True
                     collision_start_time = time.time()  # 记录碰撞开始时间
                 else:
                     collision_duration += time.time() - collision_start_time
